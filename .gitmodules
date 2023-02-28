@@ -4,3 +4,6 @@
 [submodule "atf-marvell"]
 	path = atf-marvell
 	url = https://github.com/ARM-software/arm-trusted-firmware.git
+[submodule "mv-ddr-marvell"]
+	path = mv-ddr-marvell
+	url = https://github.com/MarvellEmbeddedProcessors/mv-ddr-marvell.git
