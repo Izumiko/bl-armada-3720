@@ -1,0 +1,3 @@
+[submodule "A3700-utils-marvell"]
+	path = A3700-utils-marvell
+	url = https://github.com/MarvellEmbeddedProcessors/A3700-utils-marvell.git
