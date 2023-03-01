@@ -1,0 +1,97 @@
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 43951a7731..95ded1739c 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -262,6 +262,7 @@ else
+ dtb-$(CONFIG_ARCH_MVEBU) +=			\
+ 	armada-3720-db.dtb			\
+ 	armada-3720-espressobin.dtb		\
++	armada-3720-catdrive.dtb		\
+ 	armada-3720-turris-mox.dtb		\
+ 	armada-3720-eDPU.dtb			\
+ 	armada-3720-uDPU.dtb			\
+diff --git a/board/Marvell/mvebu_armada-37xx/board.c b/board/Marvell/mvebu_armada-37xx/board.c
+index 44c72344e8..6abcdc2c64 100644
+--- a/board/Marvell/mvebu_armada-37xx/board.c
++++ b/board/Marvell/mvebu_armada-37xx/board.c
+@@ -17,6 +17,7 @@
+ #include <asm/io.h>
+ #include <asm/arch/cpu.h>
+ #include <asm/arch/soc.h>
++#include <asm-generic/gpio.h>
+ #include <linux/delay.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+@@ -85,6 +86,54 @@ int board_init(void)
+ 	return 0;
+ }
+ 
++#define PHY_RESET	"GPIO221"
++static int phy_hw_reset(void)
++{
++	unsigned int gpio;
++	int ret;
++
++	if (!of_machine_is_compatible("marvell,armada-3720-catdrive"))
++		return 0;
++
++	ret = gpio_lookup_name(PHY_RESET, NULL, NULL, &gpio);
++	if (ret) {
++		printf("GPIO: '%s' not found\n", PHY_RESET);
++	} else {
++		gpio_free(gpio);
++		gpio_request(gpio, "phy_reset");
++		gpio_direction_output(gpio, 1);
++		mdelay(100);
++		gpio_set_value(gpio, 0);
++		mdelay(100);
++		gpio_set_value(gpio, 1);
++		mdelay(100);
++	}
++
++	return 0;
++}
++
++#define SATA_PWR	"GPIO20"
++static int enable_sata_power(void)
++{
++	unsigned int gpio;
++	int ret;
++	if (!of_machine_is_compatible("marvell,armada-3720-catdrive"))
++		return 0;
++
++	ret = gpio_lookup_name(SATA_PWR, NULL, NULL, &gpio);
++	if (ret) {
++		printf("GPIO: '%s' not found\n", SATA_PWR);
++	} else {
++		gpio_free(gpio);
++		gpio_request(gpio, "sata_pwr");
++		gpio_direction_output(gpio, 1);
++		mdelay(20);
++		gpio_set_value(gpio, 1);
++	}
++
++	return 0;
++}
++
+ #ifdef CONFIG_BOARD_LATE_INIT
+ int board_late_init(void)
+ {
+@@ -171,6 +220,8 @@ int board_ahci_enable(void)
+ 	int ret;
+ 	u8 buf[8];
+ 
++	enable_sata_power();
++
+ 	/* Only DB requres this configuration */
+ 	if (!of_machine_is_compatible("marvell,armada-3720-db"))
+ 		return 0;
+@@ -306,6 +357,8 @@ int last_stage_init(void)
+ 	struct udevice *bus;
+ 	ofnode node;
+ 
++	phy_hw_reset();
++
+ 	if (!of_machine_is_compatible("globalscale,espressobin"))
+ 		return 0;
+ 
