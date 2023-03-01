@@ -1,0 +1,41 @@
+on: [push, pull_request]
+
+jobs:
+  uboot:
+    runs-on: ubuntu-latest
+    name: Build U-Boot
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        name: checkout src
+        id: checkout
+        with:
+          submodules: recursive
+      - name: Prepare Environment
+        id: prepare
+        run: |
+            sudo apt-get update && sudo apt-get install -y bc git build-essential bison flex python3 python3-distutils swig python3-dev libpython3-dev device-tree-compiler wget libssl-dev libcrypto++-dev
+            wget "https://developer.arm.com/-/media/Files/downloads/gnu/11.3.rel1/binrel/arm-gnu-toolchain-11.3.rel1-x86_64-aarch64-none-linux-gnu.tar.xz"
+            wget "https://developer.arm.com/-/media/Files/downloads/gnu/11.3.rel1/binrel/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz"
+            tar xf arm-gnu-toolchain-11.3.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
+            tar xf arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-linux-gnueabihf.tar.xz
+      - name: Compile U-Boot
+        id: compile
+        run: |
+            export PATH=`pwd`/arm-gnu-toolchain-11.3.rel1-x86_64-aarch64-none-linux-gnu/bin:`pwd`/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-linux-gnueabihf/bin:$PATH
+            make
+            cp atf-marvell/build/a3700/release/flash-image.bin ./
+            cp atf-marvell/build/a3700/release/uart-images.tgz.bin ./
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "U-Boot for CatDrive"
+          draft: true
+          files: |
+            flash-image.bin
+            uart-images.tgz.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
