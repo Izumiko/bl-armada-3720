@@ -27,6 +27,8 @@ jobs:
             make
             cp atf-marvell/build/a3700/release/flash-image.bin ./
             cp atf-marvell/build/a3700/release/uart-images.tgz.bin ./
+            make -C A3700-utils-marvell/wtptp/src/Wtpdownloader_Linux/ -f makefile.mk
+            cp A3700-utils-marvell/wtptp/src/Wtpdownloader_Linux/WtpDownload_linux ./
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -36,6 +38,7 @@ jobs:
           files: |
             flash-image.bin
             uart-images.tgz.bin
+            WtpDownload_linux
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
