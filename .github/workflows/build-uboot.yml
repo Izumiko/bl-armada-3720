@@ -27,8 +27,15 @@ jobs:
             make
             cp atf-marvell/build/a3700/release/flash-image.bin ./
             cp atf-marvell/build/a3700/release/uart-images.tgz.bin ./
+      - name: Compile flash tools
+        id: tools
+        run: |
             make -C A3700-utils-marvell/wtptp/src/Wtpdownloader_Linux/ -f makefile.mk
             cp A3700-utils-marvell/wtptp/src/Wtpdownloader_Linux/WtpDownload_linux ./
+            wget https://gitlab.nic.cz/turris/mox-imager/-/archive/master/mox-imager-master.tar.gz
+            tar zxf mox-imager-master.tar.gz
+            make -C mox-imager-master
+            cp mox-imager-master/mox-imager ./
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -39,6 +46,7 @@ jobs:
             flash-image.bin
             uart-images.tgz.bin
             WtpDownload_linux
+            mox-imager
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
